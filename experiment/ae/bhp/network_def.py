@@ -47,9 +47,9 @@ def auto_encoder( input_var, input_length, output_length ):
 
     dense_2 = DenseLayer( dense_1, num_units = 50 )
 
-    dense_2 = DenseLayer( dense_1, num_units = 10 )
+    dense_3 = DenseLayer( dense_2, num_units = 10 )
 
-    decoding = DenseLayer( dense_2, num_units = output_length )
+    decoding = DenseLayer( dense_3, num_units = output_length )
 
     return encoding ,decoding
 
