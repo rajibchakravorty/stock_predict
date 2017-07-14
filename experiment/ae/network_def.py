@@ -30,11 +30,11 @@ def auto_encoder( input_var, input_length, output_length ):
     input_layer = InputLayer( shape = (None, 1, input_length ), \
                         input_var = input_var )
 
-    conv_1 = Conv1DLayer( input_layer, num_filters = 5, \
+    conv_1 = Conv1DLayer( input_layer, num_filters = 30, \
                           filter_size = 3, pad = 'same', \
                           name = 'conv_1' )
 
-    conv_2 = Conv1DLayer( input_layer, num_filters = 5, \
+    conv_2 = Conv1DLayer( input_layer, num_filters = 50, \
                           filter_size = 5, pad = 'same', \
                           name = 'conv_2' )
 
@@ -43,7 +43,9 @@ def auto_encoder( input_var, input_length, output_length ):
     encoding = DenseLayer( concats, num_units = 50 )
 
     
-    dense_1 = DenseLayer( encoding, num_units = 30 )
+    dense_1 = DenseLayer( encoding, num_units = 100 )
+
+    dense_2 = DenseLayer( dense_1, num_units = 50 )
 
     dense_2 = DenseLayer( dense_1, num_units = 10 )
 
@@ -51,7 +53,7 @@ def auto_encoder( input_var, input_length, output_length ):
 
     return encoding ,decoding
 
-
+'''
 if __name__ == '__main__':
 
     x = T.tensor3( 'input' )
@@ -68,3 +70,4 @@ if __name__ == '__main__':
     y11, y22 = f( xx )
 
     print y11, y22
+'''

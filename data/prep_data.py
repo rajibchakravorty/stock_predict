@@ -2,9 +2,15 @@ import pandas as pd
 
 import numpy as np
 
-from os.path import join
+from os.path import join, dirname, realpath
 
-def prepare_data( data_file, past_days, future_days ):
+current_dir = dirname( realpath( __file__ ) )
+
+
+def prepare_data( org , past_days, future_days ):
+
+
+    data_file = join( current_dir, '{0}/{0}_close.csv'.format( org ) )
 
 
     # 1 for rise, 0 for not rise
@@ -52,7 +58,7 @@ def prepare_data( data_file, past_days, future_days ):
 
     return X, Y, next_day
 
-
+'''
 if __name__ == '__main__':
 
     org = 'walmart'
@@ -70,3 +76,4 @@ if __name__ == '__main__':
     print 'Total prepared data {0}'.format( X.shape[0] )
 
     print np.sum( Y )
+'''
