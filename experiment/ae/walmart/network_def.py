@@ -25,7 +25,7 @@ import theano.tensor as T
 import numpy as np
 import theano
 
-def auto_encoder( input_var, input_length, output_length ):
+def auto_encoder( input_var, input_length, output_length, encoding_length ):
 
     input_layer = InputLayer( shape = (None, 1, input_length ), \
                         input_var = input_var )
@@ -40,7 +40,7 @@ def auto_encoder( input_var, input_length, output_length ):
 
     concats = ConcatLayer( [conv_1, conv_2] )
 
-    encoding = DenseLayer( concats, num_units = 50 )
+    encoding = DenseLayer( concats, num_units = encoding_length )
 
     
     dense_1 = DenseLayer( encoding, num_units = 100 )

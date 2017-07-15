@@ -9,6 +9,8 @@ org = 'bhp'
 
 input_length = 7
 output_length = 3
+encoding_length = 50
+
 
 num_epochs = 200
 batchsize = 32
@@ -33,3 +35,5 @@ init_model = None
 
 stat_file = '{0}/learning_stat_{1}.csv'.format( current_folder, org )
 
+
+ae_encoder_file = '{0}/encoded_values_{1}.npz'.format( current_folder, org )

@@ -36,7 +36,7 @@ def test_setup():
     print 'Loading parameters'
 
 
-    with np.load( config.model_file ) as f:
+    with np.load( config.init_model ) as f:
         param_values = [ f['arr_%d' % i] for i in range( len( f.files ) ) ]
 
     set_all_param_values( decoding, param_values )
@@ -54,8 +54,7 @@ def train_setup():
     x = T.tensor3( 'input' )
     y = T.matrix( 'output' )
 
-    encoding, decoding = cnn( x, config.input_length, config.output_length, \
-                                 config.encoding_length )
+    encoding, decoding = cnn( x, config.input_length, config.output_length )
 
 
     print 'Number of Parameters {0}'.format( count_params( decoding ) )
