@@ -6,9 +6,11 @@ current_folder = dirname( realpath( __file__ ) )
 
 org = 'bhp'
 
+# this is a linked file -> ../../ae/{org}/encoded_values_{org}.npz
+source_data_file = '{0}/encoded_values.npz'.format( current_folder )
 
-input_length = 7
-output_length = 3
+input_length = 50
+output_length = 2
 
 num_epochs = 200
 batchsize = 32
@@ -21,13 +23,13 @@ rho = 0.95
 eps = 1e-6
 
 
-l1_weight = 1.0
-l2_weight = 0.5
+l1_weight = 0.
+l2_weight = 0.
 
 
-start_error = 1e12
+start_loss = 1e12
 
-model_file = '{0}/ae_org_{1}.npz'.format( current_folder, org )
+model_file = '{0}/predict_org_{1}.npz'.format( current_folder, org )
 init_model = None
 
 

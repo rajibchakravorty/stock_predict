@@ -42,7 +42,7 @@ def encoding():
 
     X = np.expand_dims( X, axis = 1 )
     encoded_values = encoder( X )
-
+    
     np.savez( config.ae_encoder_file, zip(encoded_values, Y ) )   
 
 if __name__ == '__main__':

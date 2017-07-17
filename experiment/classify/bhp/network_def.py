@@ -25,33 +25,21 @@ import theano.tensor as T
 import numpy as np
 import theano
 
-def auto_encoder( input_var, input_length, output_length ):
+def cnn( input_var, input_length, output_length ):
 
     input_layer = InputLayer( shape = (None, 1, input_length ), \
                         input_var = input_var )
 
-    conv_1 = Conv1DLayer( input_layer, num_filters = 30, \
-                          filter_size = 3, pad = 'same', \
-                          name = 'conv_1' )
-
-    conv_2 = Conv1DLayer( input_layer, num_filters = 50, \
-                          filter_size = 5, pad = 'same', \
-                          name = 'conv_2' )
-
-    concats = ConcatLayer( [conv_1, conv_2] )
-
-    encoding = DenseLayer( concats, num_units = 50 )
-
     
-    dense_1 = DenseLayer( encoding, num_units = 100 )
+    dense_1 = DenseLayer( input_layer, num_units = 30 )
 
-    dense_2 = DenseLayer( dense_1, num_units = 50 )
+    dense_2 = DenseLayer( dense_1, num_units = 20 )
 
     dense_3 = DenseLayer( dense_2, num_units = 10 )
 
-    decoding = DenseLayer( dense_3, num_units = output_length )
+    network = DenseLayer( dense_3, num_units = output_length )
 
-    return encoding ,decoding
+    return network
 
 '''
 if __name__ == '__main__':

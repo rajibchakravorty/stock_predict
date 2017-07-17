@@ -119,10 +119,10 @@ def train():
         print ' validation squared error: {0}'.format( valid_error )
         print ' l1/l2 {0}/{1}'.format( train_l1_loss, train_l2_loss )
 
-        if valid_sq_error <= start_error:
+        if valid_error <= start_error:
 
             np.savez( config.model_file, *get_all_param_values( decoder ) )
-            start_error = valid_sq_error
+            start_error = valid_error
     
 
 if __name__ == '__main__':

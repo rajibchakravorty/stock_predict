@@ -2,12 +2,13 @@
 
 from theano import function
 
+
 import theano.tensor as T
 
 
 from lasagne.regularization import regularize_network_params, l1, l2
 
-from lasagne.objectives import squared_error
+from lasagne.objectives import categorical_crossentropy
 
 from lasagne.layers import get_output, get_all_params, \
                            get_all_param_values, \
@@ -17,34 +18,30 @@ from lasagne.layers import get_output, get_all_params, \
 from lasagne.updates import adadelta
 
 from import_config import configuration as config
-from network_def import auto_encoder as cnn
-
-import sys
-sys.path.append( '../../data' )
-from prep_data import prepare_data
+from network_def import cnn as cnn
 
 
 
 def test_setup():
 
     x = T.tensor3( 'input' )
-    y = T.matrix( 'output' )
+    y = T.lvector( 'output' )
 
-    encoding, decoding = cnn( x, config.input_length, config.output_length )
+    network = cnn( x, config.input_length, config.output_length )
 
 
     print 'Loading parameters'
 
 
-    with np.load( config.init_model ) as f:
+    with np.load( config.model_file ) as f:
         param_values = [ f['arr_%d' % i] for i in range( len( f.files ) ) ]
 
-    set_all_param_values( decoding, param_values )
-    prediction = get_output( decoding, deterministic = True )
+    set_all_param_values( network, param_values )
+    prediction = get_output( network, deterministic = True )
 
-    error = squared_error( y, prediction )       
+    ent = categorical_crossentropy( prediction,y )
 
-    test_fn = function( [x], [prediction, error], allow_input_downcast = True )
+    test_fn = function( [x,y], [prediction, ent], allow_input_downcast = True )
 
     return test_fn
 
@@ -52,13 +49,12 @@ def train_setup():
 
 
     x = T.tensor3( 'input' )
-    y = T.matrix( 'output' )
+    y = T.lvector( 'output' )
 
-    encoding, decoding = cnn( x, config.input_length, config.output_length )
+    network = cnn( x, config.input_length, config.output_length )
 
 
-    print 'Number of Parameters {0}'.format( count_params( decoding ) )
-
+    print 'Number of Parameters {0}'.format( count_params( network ) )
 
     if config.init_model is not None:
 
@@ -69,34 +65,31 @@ def train_setup():
 
     # training tasks in sequence
 
-    prediction = get_output( decoding )
+    prediction = get_output( network )
 
-    error = squared_error( y, prediction )
-    error = error.mean()
+    ent = categorical_crossentropy( prediction,y )
+    ent = ent.mean()
 
-    l1_norm = config.l1_weight * regularize_network_params( decoding, l1 )
-    l2_norm = config.l2_weight * regularize_network_params( decoding, l2 )
+    l1_norm = config.l1_weight * regularize_network_params( network, l1 )
+    l2_norm = config.l2_weight * regularize_network_params( network, l2 )
 
-    total_error = error + l1_norm + l2_norm
+    total_error = ent + l1_norm + l2_norm
 
-    params = get_all_params( decoding, trainable = True )
+    params = get_all_params( network, trainable = True )
 
     updates = adadelta( total_error, params, config.learning_rate, \
                                              config.rho, \
                                              config.eps )
 
-    train_fn = function( [x, y], [error, l1_norm, l2_norm], \
+    train_fn = function( [x, y], [ent, l1_norm, l2_norm], \
                               updates = updates, \
                               allow_input_downcast = True )
 
 
+    val_prediction = get_output( network, deterministic = True )
+    val_ent        = categorical_crossentropy( val_prediction, y )
+    val_ent        = val_ent.mean()
 
-    
+    val_fn         = function( [x,y], val_ent, allow_input_downcast = True )
 
-    val_prediction = get_output( decoding, deterministic = True )
-    val_error      = squared_error( y, val_prediction )
-    val_error      = val_error.mean()
-
-    val_fn         = function( [x,y], val_error, allow_input_downcast = True )
-
-    return encoding, decoding, train_fn, val_fn
+    return network, train_fn, val_fn

@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append( './walmart' )
+sys.path.append( './bhp' )
 import config as config
 
 configuration = config

@@ -10,13 +10,7 @@ from sklearn.utils import shuffle
 from experiment import train_setup
 from import_config import configuration as config
 
-
-
-
 import sys
-sys.path.append( '../../data' )
-from prep_data import prepare_data
-
 sys.path.append( '../../utility' )
 from util_func import save_epoch_info, iterate_minibatches
 
@@ -28,7 +22,7 @@ def convert_to_array(X, Y):
 
     x = np.array( X ).reshape( -1, config.input_length )
 
-    y = np.array( Y ).reshape( -1, config.output_length )
+    y = np.array( Y ).reshape( -1,  )
 
     x = np.expand_dims( x, axis = 1 )
 
@@ -36,17 +30,11 @@ def convert_to_array(X, Y):
 
 def train():
 
-    X, _ , next_days = prepare_data( config.org, \
-                                     config.input_length, \
-                                     config.output_length )
+    dt = np.load( config.source_data_file)['arr_0']
 
-    X, N = shuffle( X, next_days, random_state = 10 )
-    
+    X, Y = zip( *dt )
 
-    X = list( X )
-    N = list( N )
-
-    sample_size = len( X )
+    sample_size = len( X) 
 
     train_sample = int( sample_size * 0.8 )
     valid_sample = int( sample_size * 0.1 )
@@ -55,77 +43,76 @@ def train():
     X_valid = X[train_sample: (train_sample+valid_sample ) ]
     X_test  = X[(train_sample+valid_sample):]
 
-    N_train = N[0:train_sample]
-    N_valid = N[train_sample: (train_sample+valid_sample ) ]
-    N_test  = N[(train_sample+valid_sample):]
+    Y_train = Y[0:train_sample]
+    Y_valid = Y[train_sample: (train_sample+valid_sample ) ]
+    Y_test  = Y[(train_sample+valid_sample):]
 
     print 'Train/Valid/Test sample sizes {0}/{1}/{2}'.format( \
-                   len( X_train ), len( N_valid ), len( N_test ) )
+                   len( X_train ), len( Y_valid ), len( Y_test ) )
 
 
     # get the network
-    encoder, decoder, train_fn, valid_fn = train_setup()
+    network, train_fn, valid_fn = train_setup()
 
     
-    start_error = config.start_error
+    start_loss = config.start_loss
 
     for epoch in range( config.num_epochs ):
 
         print 'Epoch {0}'.format( epoch+ 1 )
 
-        train_sq_error = 0.
+        train_ent_loss = 0.
         train_l1_loss = 0.
         train_l2_loss = 0.
         train_batch = 0
         start_time = time.time()
 
-        for batch in iterate_minibatches( X_train, N_train, config.batchsize, True ):
+        for batch in iterate_minibatches( X_train, Y_train, config.batchsize, True ):
 
             x, y = batch
             x, y = convert_to_array( x, y )
 
-            error, l1, l2 = train_fn( x, y )
+            ent, l1, l2 = train_fn( x, y )
 
-            train_sq_error += error
+            train_ent_loss += ent
             train_l1_loss += l1
             train_l2_loss += l2
 
             train_batch += 1
 
-        valid_sq_error = 0.
+        valid_ent_loss = 0.
         valid_batch = 0
-        for batch in iterate_minibatches( X_valid, N_valid, config.batchsize, False ):
+        for batch in iterate_minibatches( X_valid, Y_valid, config.batchsize, False ):
 
             x, y = batch
             x, y = convert_to_array( x, y )
             
-            error = valid_fn( x, y )
+            ent = valid_fn( x, y )
 
-            valid_sq_error += error
+            valid_ent_loss += ent
             valid_batch += 1
 
-        train_error = train_sq_error / train_batch
+        train_loss = train_ent_loss / train_batch
         train_l1_loss /= train_batch
         train_l2_loss /= train_batch
-        valid_error = valid_sq_error/valid_batch
+        valid_loss = valid_ent_loss/valid_batch
         epoch_time = time.time() - start_time
         print 'Epoch {0} completed in {1}s'.format( epoch+1, epoch_time )
 
-        save_epoch_info( epoch+1, epoch_time, train_error, train_l1_loss, train_l2_loss,\
-                            valid_error, config.stat_file )
+        save_epoch_info( epoch+1, epoch_time, train_loss, train_l1_loss, train_l2_loss,\
+                            valid_loss, config.stat_file )
 
         print 'Epoch stats'
-        print ' training squared error: {0}'.format( train_error )
-        print ' validation squared error: {0}'.format( valid_error )
+        print ' training entropy loss: {0}'.format( train_loss )
+        print ' validation entropy loss: {0}'.format( valid_loss )
         print ' l1/l2 {0}/{1}'.format( train_l1_loss, train_l2_loss )
 
-        if valid_sq_error <= start_error:
+        if valid_loss <= start_loss:
 
-            np.savez( config.model_file, *get_all_param_values( decoder ) )
-            start_error = valid_sq_error
+            np.savez( config.model_file, *get_all_param_values( network ) )
+            start_loss = valid_loss
     
 
 if __name__ == '__main__':
 
     train()
-
