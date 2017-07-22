@@ -6,6 +6,8 @@ from lasagne.layers import get_all_param_values
 
 
 from sklearn.utils import shuffle
+from sklearn.metrics import accuracy_score
+
 
 from experiment import train_setup
 from import_config import configuration as config
@@ -65,6 +67,8 @@ def train():
         train_l1_loss = 0.
         train_l2_loss = 0.
         train_batch = 0
+        train_prediction = None
+        train_targets = None
         start_time = time.time()
 
         for batch in iterate_minibatches( X_train, Y_train, config.batchsize, True ):
@@ -72,24 +76,55 @@ def train():
             x, y = batch
             x, y = convert_to_array( x, y )
 
-            ent, l1, l2 = train_fn( x, y )
+            ent, l1, l2, pred = train_fn( x, y )
 
             train_ent_loss += ent
             train_l1_loss += l1
             train_l2_loss += l2
 
+            #pos_pred = np.reshape( pred[:,1], (-1,1)) 
+            target   = np.reshape( y, (-1,1 ) )
+            pred_class = np.argmax( pred, axis = 1 )
+            pred_class = np.reshape( pred_class, (-1, 1) ) 
+            if train_prediction is None:
+                train_prediction = pred_class
+                train_targets = target
+            else:
+                train_prediction = np.concatenate( (train_prediction, \
+                                                    pred_class ), \
+                                                    axis = 0 )
+                train_targets = np.concatenate( (train_targets, target ),\
+                                                axis = 0 )
+
             train_batch += 1
 
         valid_ent_loss = 0.
         valid_batch = 0
+        valid_prediction = None
+        valid_targets = None
         for batch in iterate_minibatches( X_valid, Y_valid, config.batchsize, False ):
 
             x, y = batch
             x, y = convert_to_array( x, y )
             
-            ent = valid_fn( x, y )
-
+            ent, pred = valid_fn( x, y )
             valid_ent_loss += ent
+
+            target   = np.reshape( y, (-1,1 ) )
+
+            target        = np.reshape( y, (-1,1 ) )
+            pred_class  = np.argmax( pred , axis = 1 )
+            pred_class  = np.reshape( pred_class, (-1,1))
+            if valid_prediction is None:
+                valid_prediction = pred_class
+                valid_targets = target
+            else:
+                valid_prediction = np.concatenate( (valid_prediction, \
+                                                    pred_class ), \
+                                                    axis = 0 )
+                valid_targets = np.concatenate( (valid_targets, target ),\
+                                                axis = 0 )
+
             valid_batch += 1
 
         train_loss = train_ent_loss / train_batch
@@ -97,15 +132,20 @@ def train():
         train_l2_loss /= train_batch
         valid_loss = valid_ent_loss/valid_batch
         epoch_time = time.time() - start_time
+
+        ##do the performance calculation using sklearn
+        train_accuracy = accuracy_score( train_prediction, train_targets )
+        valid_accuracy = accuracy_score( valid_prediction, valid_targets )
         print 'Epoch {0} completed in {1}s'.format( epoch+1, epoch_time )
 
-        save_epoch_info( epoch+1, epoch_time, train_loss, train_l1_loss, train_l2_loss,\
-                            valid_loss, config.stat_file )
+        save_epoch_info( epoch+1, epoch_time, train_loss, train_accuracy, train_l1_loss+train_l2_loss,\
+                            valid_accuracy, config.stat_file )
 
         print 'Epoch stats'
-        print ' training entropy loss: {0}'.format( train_loss )
-        print ' validation entropy loss: {0}'.format( valid_loss )
-        print ' l1/l2 {0}/{1}'.format( train_l1_loss, train_l2_loss )
+        print ' training accuracy: {0}'.format( train_accuracy )
+        print ' validation accuracy: {0}'.format( valid_accuracy )
+        print ' l1/l2 {0}/{1}'.format( train_loss, valid_loss )
+
 
         if valid_loss <= start_loss:
 

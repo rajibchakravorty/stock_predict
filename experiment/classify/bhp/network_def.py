@@ -31,13 +31,14 @@ def cnn( input_var, input_length, output_length ):
                         input_var = input_var )
 
     
-    dense_1 = DenseLayer( input_layer, num_units = 30 )
+    dense_1 = DenseLayer( input_layer, num_units = 10 )
 
-    dense_2 = DenseLayer( dense_1, num_units = 20 )
+    dense_2 = DenseLayer( dense_1, num_units = 5 )
 
-    dense_3 = DenseLayer( dense_2, num_units = 10 )
+    dense_3 = DenseLayer( dense_2, num_units = 3 )
 
-    network = DenseLayer( dense_3, num_units = output_length )
+    network = DenseLayer( dense_3, num_units = output_length, \
+                          nonlinearity = softmax )
 
     return network
 

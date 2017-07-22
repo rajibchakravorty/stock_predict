@@ -23,8 +23,8 @@ rho = 0.95
 eps = 1e-6
 
 
-l1_weight = 0.
-l2_weight = 0.
+l1_weight = 0.1
+l2_weight = 0.5
 
 
 start_loss = 1e12

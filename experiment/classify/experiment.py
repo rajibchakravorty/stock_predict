@@ -81,7 +81,7 @@ def train_setup():
                                              config.rho, \
                                              config.eps )
 
-    train_fn = function( [x, y], [ent, l1_norm, l2_norm], \
+    train_fn = function( [x, y], [ent, l1_norm, l2_norm, prediction], \
                               updates = updates, \
                               allow_input_downcast = True )
 
@@ -90,6 +90,6 @@ def train_setup():
     val_ent        = categorical_crossentropy( val_prediction, y )
     val_ent        = val_ent.mean()
 
-    val_fn         = function( [x,y], val_ent, allow_input_downcast = True )
+    val_fn         = function( [x,y], [val_ent, val_prediction], allow_input_downcast = True )
 
     return network, train_fn, val_fn
